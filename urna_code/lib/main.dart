@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:urna_code/qr_reader.dart';
+import 'package:urna_code/urna_code_service.dart';
 
 void main() => runApp(const MyApp());
 
@@ -46,13 +47,21 @@ class _HomeState extends State<Home> {
                 final barcode = value as Barcode;
                 // When the QR Reader page is popped, show the value on a SnackBar
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(barcode.code ?? 'No barcode scanned!'),
+                  const SnackBar(
+                    content: Text(
+                        'Código de barra escaneado' ?? 'No barcode scanned!'),
                   ),
                 );
                 if (barcode.code != null) {
-                  // copy the barcode to the clipboard
-                  Clipboard.setData(ClipboardData(text: barcode.code!));
+                  UrnaCodeService()
+                      .addNewQRCode(QRCodeData(barcode.code!))
+                      .whenComplete(
+                        () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Código de barra adicionado!'),
+                          ),
+                        ),
+                      );
                 }
               });
             },

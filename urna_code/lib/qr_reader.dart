@@ -126,12 +126,14 @@ class _QRViewExampleState extends State<QRViewExample> {
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    setState(() {
-      this.controller = controller;
-    });
     controller.scannedDataStream.listen((Barcode scanData) {
+      // before close the QR Reader page, pause the camera
+      controller.pauseCamera();
       // pop and return the scan result
       Navigator.pop(context, scanData);
+    });
+    setState(() {
+      this.controller = controller;
     });
   }
 
