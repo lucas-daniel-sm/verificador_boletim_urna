@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:urna_code/parcial.dart';
 
 class QRCodeData {
   String data;
@@ -19,7 +20,7 @@ class UrnaCodeService {
   static final String basicAuth =
       'Basic ${base64.encode(utf8.encode('$apiUser:$apiPassword'))}';
 
-  Future<void> addNewQRCode(QRCodeData qrCodeData) async {
+  Future<bool> addNewQRCode(QRCodeData qrCodeData) async {
     final response = await http.post(
       Uri.http(apiUrl),
       headers: <String, String>{
@@ -29,9 +30,31 @@ class UrnaCodeService {
       body: jsonEncode(qrCodeData.toJson()),
     );
 
-    if (response.statusCode != 201) {
-      print('Failed to add new QR Code: ${response.statusCode}: \n\n\t${response.body}\n');
-      throw Exception('Failed to add new QR Code');
+    if (response.statusCode != 202) {
+      print(
+          'Failed to add new QR Code: ${response.statusCode}: \n\n\t${response.body}\n');
+      throw Exception('Failed to add new QR Code: ${response.statusCode} - ${response.body}');
     }
+
+    print('Added new QR Code: ${response.statusCode}: \n\n\t${response.body}\n');
+    return true;
+  }
+
+  Future<Parcial> getParcial() async {
+    final response = await http.get(
+      Uri.http(apiUrl, 'parcial'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': basicAuth,
+      },
+    );
+
+    if (response.statusCode != 200) {
+      print(
+          'Failed to get parcial: ${response.statusCode}: \n\n\t${response.body}\n');
+      throw Exception('Failed to get parcial');
+    }
+
+    return Parcial.fromJson(jsonDecode(response.body));
   }
 }

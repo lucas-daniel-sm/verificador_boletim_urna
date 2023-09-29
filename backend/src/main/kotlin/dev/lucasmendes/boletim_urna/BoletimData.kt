@@ -19,6 +19,11 @@ class VotoOutput(
     val votos: Long? = null,
 )
 
+class Parcial(
+    val totalDeUrnasApuradas: Long? = null,
+    val totalDeVotos: List<VotoOutput>? = null,
+)
+
 @Entity
 class BoletimData(
     @Id
@@ -32,7 +37,6 @@ class BoletimData(
     val municipio: String? = null,
     val zona: String? = null,
     val secao: String? = null,
-    @Column(unique = true)
     val urna: String? = null
 ) {
     override fun toString(): String {
@@ -43,11 +47,25 @@ class BoletimData(
 interface BoletimDataRepository : CrudRepository<BoletimData?, Long?> {
     @Query("SELECT new dev.lucasmendes.boletim_urna.VotoOutput(v.candidato, SUM(v.votos)) FROM BoletimData b JOIN b.votos v GROUP BY v.candidato")
     fun getTotalVotosPorCandidato(): MutableIterable<VotoOutput>
+
+    // seleciona o total de urnas escaneadas, considerando que o campo urna não é único
+    @Query("SELECT COUNT(DISTINCT b.urna) FROM BoletimData b")
+    fun getTotalDeUrnasEscaneadas(): Long
+
+    @Query("SELECT b FROM BoletimData b WHERE b.urna = ?1 AND b.indiceIndice = ?2")
+    fun findByUrnaAndIndiceIndice(urna: String?, indiceIndice: String?): BoletimData?
 }
+
+class DuplicatedEntryException(message: String?) : Exception(message)
 
 @Service
 class BoletimDataService(private val boletimDataRepository: BoletimDataRepository) {
     fun save(boletimData: BoletimData) {
+        // before save check if there is no other BoletimData with the same urna and indiceIndice
+        val boletimDataByUrnaAndIndiceIndice = boletimDataRepository.findByUrnaAndIndiceIndice(boletimData.urna, boletimData.indiceIndice)
+        if (boletimDataByUrnaAndIndiceIndice != null) {
+            throw DuplicatedEntryException("BoletimData com urna ${boletimData.urna} e indice ${boletimData.indiceIndice} já existe")
+        }
         boletimDataRepository.save(boletimData)
     }
 
@@ -63,5 +81,15 @@ class BoletimDataService(private val boletimDataRepository: BoletimDataRepositor
         val totalVotosPorCandidato = boletimDataRepository.getTotalVotosPorCandidato()
         print(totalVotosPorCandidato)
         return totalVotosPorCandidato
+    }
+
+    fun getTotalDeUrnasEscaneadas(): Long {
+        return boletimDataRepository.getTotalDeUrnasEscaneadas()
+    }
+
+    fun getParcial(): Parcial {
+        val totalDeUrnasEscaneadas = getTotalDeUrnasEscaneadas()
+        val totalVotosPorCandidato = getTotalVotosPorCandidato()
+        return Parcial(totalDeUrnasEscaneadas, totalVotosPorCandidato.toList())
     }
 }

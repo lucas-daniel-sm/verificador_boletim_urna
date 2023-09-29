@@ -34,8 +34,9 @@ class _QRViewExampleState extends State<QRViewExample> {
       child: Scaffold(
         appBar: AppBar(title: const Text('QR Code Scanner')),
         body: Stack(
+          fit: StackFit.expand,
           children: <Widget>[
-            Expanded(child: _buildQrView(context)),
+            _buildQrView(context),
             // flash button
             Align(
               alignment: Alignment.topRight,

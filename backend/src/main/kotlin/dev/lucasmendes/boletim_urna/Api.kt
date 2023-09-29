@@ -10,7 +10,12 @@ class Api(val boletimParser: BoletimParser, val boletimDataService: BoletimDataS
     @PostMapping
     fun postNewQrCode(@RequestBody qrCodeData: QrCodeData): ResponseEntity<Any> {
         val parse = boletimParser.parse(qrCodeData.data)
-        boletimDataService.save(parse)
+        try {
+            boletimDataService.save(parse)
+        } catch (e: DuplicatedEntryException) {
+            println("DuplicatedEntryException: ${e.message}")
+            return ResponseEntity.badRequest().body(e.message)
+        }
         return ResponseEntity.accepted().body(parse)
     }
 
@@ -23,6 +28,18 @@ class Api(val boletimParser: BoletimParser, val boletimDataService: BoletimDataS
     @GetMapping("/total-votos-por-candidato")
     fun getTotalVotosPorCandidato(): ResponseEntity<Any> {
         val all = boletimDataService.getTotalVotosPorCandidato()
+        return ResponseEntity.ok(all)
+    }
+
+    @GetMapping("/total-de-urnas-escaneadas")
+    fun getTotalDeUrnasEscaneadas(): ResponseEntity<Any> {
+        val all = boletimDataService.getTotalDeUrnasEscaneadas()
+        return ResponseEntity.ok(all)
+    }
+
+    @GetMapping("/parcial")
+    fun getParcial(): ResponseEntity<Any> {
+        val all = boletimDataService.getParcial()
         return ResponseEntity.ok(all)
     }
 
