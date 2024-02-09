@@ -37,7 +37,7 @@ class BoletimParser {
             Voto(candidato = candidato, votos = votos)
         }
 
-        val boletimData = BoletimData(
+        return BoletimData(
             totalVotos = votosMap.values.sum(),
             votos = votos,
             indiceIndice = data["QRBU.indice"] ?: "",
@@ -47,7 +47,5 @@ class BoletimParser {
             secao = data["SECA"] ?: "",
             urna = data["IDUE"] ?: ""
         )
-
-        return boletimData
     }
 }

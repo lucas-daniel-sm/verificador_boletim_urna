@@ -21,6 +21,10 @@ class _ParcialViewState extends State<ParcialView> {
       parcial = value;
       print('Carregou a parcial: $value');
       return value;
+    }).onError((error, stackTrace) {
+      print('Erro ao carregar a parcial: $error');
+      print(stackTrace);
+      throw Exception('Erro ao carregar a parcial');
     });
   }
 
@@ -34,6 +38,9 @@ class _ParcialViewState extends State<ParcialView> {
       body: FutureBuilder<Parcial>(
         future: parcialFuture,
         builder: (context, snapshot) {
+          print("snapshot.hasData: ${snapshot.hasData}");
+          print("snapshot.hasError: ${snapshot.hasError}");
+          print("snapshot.data: ${snapshot.data}");
           if (snapshot.hasData) {
             return loaded;
           } else if (snapshot.hasError) {

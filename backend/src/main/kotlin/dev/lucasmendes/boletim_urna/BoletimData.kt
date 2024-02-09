@@ -12,7 +12,11 @@ class Voto(
     val id: Long? = null,
     val candidato: Int? = null,
     val votos: Int? = null,
-)
+) {
+    override fun toString(): String {
+        return "Voto(id=$id, candidato=$candidato, votos=$votos)"
+    }
+}
 
 class VotoOutput(
     val candidato: Int? = null,
@@ -56,13 +60,21 @@ interface BoletimDataRepository : CrudRepository<BoletimData?, Long?> {
     fun findByUrnaAndIndiceIndice(urna: String?, indiceIndice: String?): BoletimData?
 }
 
+// execao para quando tentar salvar um BoletimData com urna e indice já existentes
 class DuplicatedEntryException(message: String?) : Exception(message)
+
+// execao para quando tentar salvar um BoletimData com sem votos
+class EmptyVotosException(message: String?) : Exception(message)
 
 @Service
 class BoletimDataService(private val boletimDataRepository: BoletimDataRepository) {
     fun save(boletimData: BoletimData) {
-        // before save check if there is no other BoletimData with the same urna and indiceIndice
-        val boletimDataByUrnaAndIndiceIndice = boletimDataRepository.findByUrnaAndIndiceIndice(boletimData.urna, boletimData.indiceIndice)
+        if (boletimData.votos.isNullOrEmpty()) {
+            throw EmptyVotosException("BoletimData sem votos")
+        }
+
+        val boletimDataByUrnaAndIndiceIndice =
+            boletimDataRepository.findByUrnaAndIndiceIndice(boletimData.urna, boletimData.indiceIndice)
         if (boletimDataByUrnaAndIndiceIndice != null) {
             throw DuplicatedEntryException("BoletimData com urna ${boletimData.urna} e indice ${boletimData.indiceIndice} já existe")
         }

@@ -15,6 +15,9 @@ class Api(val boletimParser: BoletimParser, val boletimDataService: BoletimDataS
         } catch (e: DuplicatedEntryException) {
             println("DuplicatedEntryException: ${e.message}")
             return ResponseEntity.badRequest().body(e.message)
+        } catch (e: EmptyVotosException) {
+            println("EmptyVotosException: ${e.message}")
+            return ResponseEntity.badRequest().body(e.message)
         }
         return ResponseEntity.accepted().body(parse)
     }
@@ -37,6 +40,7 @@ class Api(val boletimParser: BoletimParser, val boletimDataService: BoletimDataS
         return ResponseEntity.ok(all)
     }
 
+    @CrossOrigin(origins = ["*"])
     @GetMapping("/parcial")
     fun getParcial(): ResponseEntity<Any> {
         val all = boletimDataService.getParcial()
